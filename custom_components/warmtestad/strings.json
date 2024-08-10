@@ -1,0 +1,51 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Warmtestad",
+        "description": "Set up your Warmtestad integration.",
+        "data": {
+          "email": "Email Address",
+          "password": "Password",
+          "portfolio_id": "Portfolio ID",
+          "connection_id": "Connection ID",
+          "asset_id": "Asset ID",
+          "channel_id": "Channel ID"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "This email address is already configured."
+    },
+    "abort": {
+      "already_configured": "You have already configured Warmtestad for this email."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Warmtestad options",
+        "description": "Update your Warmtestad configuration.",
+        "data": {
+          "email": "Email Address",
+          "password": "Password",
+          "portfolio_id": "Portfolio ID",
+          "connection_id": "Connection ID",
+          "asset_id": "Asset ID",
+          "channel_id": "Channel ID"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "default": {
+        "name": "Warmtestad Heat Usage",
+        "state": {
+          "unit_of_measurement": "GJ"
+        }
+      }
+    }
+  },
+  "title": "Warmtestad"
+}

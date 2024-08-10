@@ -1,0 +1,15 @@
+{
+  "domain": "warmtestad",
+  "name": "Warmtestad",
+  "codeowners": [
+    "@janyksteenbeek"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/janyksteenbeek/homeassistant-warmtestad",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": ["requests"],
+  "ssdp": [],
+  "zeroconf": []
+}
