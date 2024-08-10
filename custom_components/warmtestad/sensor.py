@@ -101,14 +101,10 @@ class WarmtestadSensor(Entity):
     @property
     def device_class(self) -> str:
         return "gas"
-
+    
     @property
     def state_class(self) -> str:
         return "total"
-
-    async def async_will_remove_from_hass(self) -> None:
-        await self._session.close()
-
 
 async def async_setup_platform(
     hass, config, async_add_entities, discovery_info=None
