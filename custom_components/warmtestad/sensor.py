@@ -87,12 +87,24 @@ class WarmtestadSensor(Entity):
         return self._state
 
     @property
+    def unique_id(self) -> str:
+        return f"{self._portfolio_id}-{self._connection_id}-{self._asset_id}-{self._channel_id}"
+
+    @property
     def unit_of_measurement(self) -> str:
         return "GJ"
 
     @property
     def icon(self) -> str:
         return "mdi:fire"
+    
+    @property
+    def device_class(self) -> str:
+        return "gas"
+
+    @property
+    def state_class(self) -> str:
+        return "total"
 
     async def async_will_remove_from_hass(self) -> None:
         await self._session.close()
