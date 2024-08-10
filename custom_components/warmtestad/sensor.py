@@ -4,8 +4,9 @@ import logging
 import aiohttp
 
 import homeassistant
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from .const import (
@@ -24,7 +25,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(days=1)
 WARMTESTAD_BASE_URL = "https://portalwarmtestad-prd.azurewebsites.net"
 
 
-class WarmtestadSensor(Entity):
+class WarmtestadSensor(SensorEntity):
     def __init__(self, hass: HomeAssistant, config) -> None:
         self.hass = hass
         self._email = config[CONF_EMAIL]
@@ -97,14 +98,15 @@ class WarmtestadSensor(Entity):
     @property
     def icon(self) -> str:
         return "mdi:fire"
-    
+
     @property
-    def device_class(self) -> str:
-        return "energy"
-    
+    def device_class(self) -> SensorDeviceClass:
+        return SensorDeviceClass.ENERGY
+
     @property
-    def state_class(self) -> str:
-        return "total"
+    def state_class(self) -> SensorStateClass:
+        return SensorStateClass.TOTAL
+
 
 async def async_setup_platform(
     hass, config, async_add_entities, discovery_info=None
