@@ -1,6 +1,7 @@
 {
   "domain": "warmtestad",
   "name": "Warmtestad",
+  "version": "0.0.1",
   "codeowners": [
     "@janyksteenbeek"
   ],
