@@ -100,7 +100,7 @@ class WarmtestadSensor(Entity):
     
     @property
     def device_class(self) -> str:
-        return "gas"
+        return "energy"
     
     @property
     def state_class(self) -> str:
