@@ -1,69 +1,87 @@
 # Warmtestad Sensor for Home Assistant
 
-This integration allows you to monitor heat usage data from the Warmtestad service using Home Assistant. It fetches and updates heat usage data from the Warmtestad client portal using your email and password.
+This integration monitors your heat usage from the [Warmtestad](https://warmtestad.nl/)
+customer portal in Home Assistant. It logs in with your portal email and password
+and exposes your cumulative heat consumption (in GJ) as an energy sensor.
 
-Warmtestad is a provider of energy and heat services in the Netherlands. See [warmtestad.nl](https://warmtestad.nl/) for more information. This integration is not affiliated with Warmtestad and is an unofficial implementation.
+Warmtestad is a provider of energy and heat services in the Netherlands. This
+integration is unofficial and not affiliated with Warmtestad.
 
+> **Heads up — the portal was completely rebuilt.** In 2026 Warmtestad migrated
+> `mijn.warmtestad.nl` to the **ZeroFriction** platform, an ASP.NET Core **Blazor
+> Server** app. The old REST API this integration used (bearer token + JSON
+> endpoints) no longer exists, and there is **no public/JSON API** anymore — the
+> data is only delivered over a Blazor **SignalR** circuit using the binary
+> *blazorpack* protocol. This integration now reverse-engineers that flow. See
+> [How it works](#how-it-works) below. Because the protocol is undocumented and
+> binary, this client is inherently fragile to future portal changes.
 
 ## Installation
 
-1. **Clone the Repository:**
+1. Copy `custom_components/warmtestad` into your Home Assistant
+   `config/custom_components/` directory (or install via HACS).
+2. Restart Home Assistant.
+3. Go to **Settings → Devices & Services → Add Integration**, search for
+   **Warmtestad**, and enter the **email** and **password** you use to log in to
+   `mijn.warmtestad.nl`.
+
+That's it — you no longer need to look up portfolio/connection/asset/channel IDs.
+Existing configurations from older versions are migrated automatically.
+
+## How it works
+
+The portal no longer exposes an API, so the integration drives the Blazor
+circuit the same way the browser does (there is **no** HTTP form POST for login —
+that turned out to be a red herring; the form is interactive and submits over
+the circuit):
+
+1. `GET /account/login` for the `<!--Blazor:{...}-->` server component markers.
+2. `POST /_blazor/negotiate` to obtain a SignalR connection token.
+3. Open a WebSocket to `/_blazor` and perform the *blazorpack* handshake.
+4. `StartCircuit(...)`; the server streams **render batches** (a binary
+   RenderTree format). We parse the string table, the 20-byte frame records and
+   the diff section to find the login form's event handler ids and — crucially —
+   the `componentId` that owns each input.
+5. Dispatch browser events over the circuit (`BeginInvokeDotNetFromJS` →
+   `DispatchEventAsync`): fill the email and password inputs (the bound value
+   travels in `eventFieldInfo.fieldValue` with the owning `componentId`), then
+   submit the form. Wrong credentials render an inline *"…email or password was
+   wrong"* message; success navigates to `/login?key=<guid>`, which sets the
+   auth cookie.
+6. Boot the circuit again for `/consumption` and read the rendered `… GJ`
+   consumption value out of the render-batch strings.
+
+The relevant code lives in
+[`custom_components/warmtestad/blazor_client.py`](custom_components/warmtestad/blazor_client.py).
+The boot, render-batch parsing, event dispatch and credential-rejection
+detection are all verified against the live portal; the post-login navigation
+and consumption read should be confirmed with a real account via the probe
+below.
+
+## Developing / troubleshooting the portal client
+
+Because the protocol is reverse-engineered and binary, it may need tweaking when
+the portal changes. A standalone probe script lets you exercise the client
+directly with your own credentials, outside Home Assistant:
 
 ```bash
-git clone https://github.com/janyksteenbeek/homeassistant-warmtestad.git
+pip install aiohttp msgpack
+WARMTESTAD_EMAIL='you@example.com' WARMTESTAD_PASSWORD='secret' \
+    python scripts/probe.py -v --dump
 ```
 
-2. **Copy Files:**
-
-Copy the integration files into your Home Assistant custom components directory. Typically, this is located at `config/custom_components/`.
-
-```bash
-cp -r homeassistant-warmtestad/custom_components/warmtestad /config/custom_components/
-```
-
-3. **Restart Home Assistant:**
-
-Restart Home Assistant to load the new integration.
-
-## Configuration
-
-### YAML Configuration
-
-Add the following to your `configuration.yaml` file:
-
-```yaml
-sensor:
-  - platform: warmtestad
-    email: YOUR_EMAIL
-    password: YOUR_PASSWORD
-    portfolio_id: YOUR_PORTFOLIO_ID
-    connection_id: YOUR_CONNECTION_ID
-    asset_id: YOUR_ASSET_ID
-    channel_id: YOUR_CHANNEL_ID
-```
-
-Replace the placeholders with your actual Warmtestad credentials and IDs. 
-
-You can find the required IDs by inspecting the Warmtestad client portal. Navigate to the heat usage data you want to monitor and check the network tab in DevTools. Look for the API requests and extract the IDs from the `indexes` endpoint. The URL should look like this:
-
-
-```
-https://portalwarmtestad-prd.azurewebsites.net/users/USER_ID/portfolios/PORTFOLIO_ID/connections/CONNECTION_ID/assets/ASSET_ID/channels/CHANNEL_ID/indexes?page=1
-```
-
-
-You can also configure the sensor via the Home Assistant UI:
-
-1. Navigate to `Configuration` > `Integrations`.
-2. Click on `Add Integration` and search for "Warmtestad".
-3. Enter the required credentials and IDs when prompted.
+It prints the login result and the consumption value, lists every `… GJ` string
+it found, and (with `--dump`) writes the raw render batches to
+`warmtestad_batches.bin` for offline inspection. This is the fastest way to
+diagnose a broken login or a changed data layout.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file
+for details.
 
 ## Security
 
-If you discover any security-related issues, please email [security@janyk.dev](mailto:security@janyk.dev) instead of using the
-issue tracker. All security vulnerabilities will be promptly addressed.
+If you discover any security-related issues, please email
+[security@janyk.dev](mailto:security@janyk.dev) instead of using the issue
+tracker.

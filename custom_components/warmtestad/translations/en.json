@@ -1,51 +1,29 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "You have already configured Warmtestad for this email."
-        },
-        "error": {
-            "already_configured": "This email address is already configured."
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "asset_id": "Asset ID",
-                    "channel_id": "Channel ID",
-                    "connection_id": "Connection ID",
-                    "email": "Email Address",
-                    "password": "Password",
-                    "portfolio_id": "Portfolio ID"
-                },
-                "description": "Set up your Warmtestad integration.",
-                "title": "Configure Warmtestad"
-            }
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Warmtestad",
+        "description": "Log in with the same email and password you use for the Warmtestad customer portal (mijn.warmtestad.nl).",
+        "data": {
+          "email": "Email address",
+          "password": "Password"
         }
+      }
     },
-    "entity": {
-        "sensor": {
-            "default": {
-                "name": "Warmtestad Heat Usage",
-                "state": {
-                    "unit_of_measurement": "GJ"
-                }
-            }
-        }
+    "error": {
+      "invalid_auth": "Invalid email or password.",
+      "cannot_connect": "Could not connect to the Warmtestad portal."
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "asset_id": "Asset ID",
-                    "channel_id": "Channel ID",
-                    "connection_id": "Connection ID",
-                    "email": "Email Address",
-                    "password": "Password",
-                    "portfolio_id": "Portfolio ID"
-                },
-                "description": "Update your Warmtestad configuration.",
-                "title": "Configure Warmtestad options"
-            }
-        }
-    },
-    "title": "Warmtestad"
+    "abort": {
+      "already_configured": "This account is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "heat_usage": {
+        "name": "Heat usage"
+      }
+    }
+  },
+  "title": "Warmtestad"
 }
